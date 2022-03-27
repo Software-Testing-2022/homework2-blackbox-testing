@@ -1,6 +1,5 @@
 package at.jku.swtesting;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -8,92 +7,116 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class RingBufferTest<Item> {
 
-	RingBuffer<String> a;
-	@BeforeEach
-	void setUp() {
-		a = new RingBuffer<>(3);
-	}
+    private static final int DEFAULT_BUFFER_CAPACITY = 3;
 
-	@Test
-	void testRingBufferConstructor() {
-		assertNotNull(a);
-		assertThrows(IllegalArgumentException.class, () -> { new RingBuffer<>(0);});
-	}
+    private RingBuffer<String> ringBuffer;
 
-	@Test
-	void testCapacity() {
-		assertEquals(3, a.capacity());
-		a.enqueue("1");
-		a.enqueue("2");
-		a.enqueue("3");
-		assertEquals(a.size(), a.capacity());
-	}
+    @BeforeEach
+    void setUp() {
+        ringBuffer = new RingBuffer<>(DEFAULT_BUFFER_CAPACITY);
+    }
 
-	@Test
-	void testSize() {
-		a.enqueue("S");
-		assertEquals(1, a.size());
-		a.dequeue();
-		assertEquals(0, a.size());
-	}
+    @Test
+    void testRingBufferConstructor() {
+        assertNotNull(ringBuffer);
+        assertThrows(IllegalArgumentException.class, () -> {
+            new RingBuffer<>(0);
+        });
+    }
 
-	@Test
-	void testIsEmpty() {
-		assertTrue(a.isEmpty());
-		a.enqueue("a");
-		assertFalse(a.isEmpty());
-	}
+    @Test
+    void testCapacity() {
+        assertEquals(DEFAULT_BUFFER_CAPACITY, ringBuffer.capacity());
 
-	@Test
-	void testIsFull() {
-		a.enqueue("1");
-		a.enqueue("2");
-		a.enqueue("3");
-		assertTrue(a.isFull());
-		a.dequeue();
-		assertFalse(a.isFull());
-	}
+		/*
+		TODO: Testet der folgende Code-Abschnitt nicht die Methode "size"?
+		ringBuffer.enqueue("1");
+		ringBuffer.enqueue("2");
+		ringBuffer.enqueue("3");
+		assertEquals(3, ringBuffer.capacity());*/
+    }
 
-	@Test
-	void testEnqueue() {
-		a.enqueue("a");
-		assertEquals("a", a.peek());
-		a.enqueue("b");
-		a.enqueue("c");
-		a.enqueue("d");
-		assertEquals("b", a.peek());
-		a.dequeue();
-		a.dequeue();
-		assertEquals("d", a.peek());
-	}
+    @Test
+    void testSize() {
+        assertEquals(0, ringBuffer.size());
 
-	@Test
-	void testDequeue() {
-		a = null;
-		assertThrows(RuntimeException.class , () -> {a.dequeue();});
+        ringBuffer.enqueue("a");
+        assertEquals(1, ringBuffer.size());
 
-		a = new RingBuffer<>(3);
-		a.enqueue("1");
-		assertEquals("1" , a.dequeue());
-		a.enqueue("2");
-		a.enqueue("3");
-		a.dequeue();
-		assertEquals("3" , a.dequeue());
-	}
+        ringBuffer.dequeue();
+        assertEquals(0, ringBuffer.size());
+    }
 
-	@Test
-	void testPeek() {
-		a = null;
-		assertThrows(RuntimeException.class , () -> {a.peek();});
+    @Test
+    void testIsEmpty() {
+        assertTrue(ringBuffer.isEmpty());
 
-		a = new RingBuffer<>(3);
-		a.enqueue("a");
-		assertEquals("a", a.peek());
-		a.enqueue("b");
-		assertNotEquals("b", a.peek());
-	}
+        ringBuffer.enqueue("a");
+        assertFalse(ringBuffer.isEmpty());
+    }
 
-	@Test
-	void testIterator() {
-	}
+    @Test
+    void testIsFull() {
+        assertFalse(ringBuffer.isFull());
+
+        ringBuffer.enqueue("a");
+        ringBuffer.enqueue("b");
+        ringBuffer.enqueue("c");
+        assertTrue(ringBuffer.isFull());
+
+        ringBuffer.dequeue();
+        assertFalse(ringBuffer.isFull());
+    }
+
+    @Test
+    void testEnqueue() {
+        ringBuffer.enqueue("a");
+        assertEquals("a", ringBuffer.peek());
+
+        ringBuffer.enqueue("b");
+        ringBuffer.enqueue("c");
+        ringBuffer.enqueue("d");
+        assertEquals("b", ringBuffer.peek());
+
+		/*
+		TODO: Testet der folgende Code-Abschnitt nicht die Methode "dequeue"?
+		ringBuffer.dequeue();
+		ringBuffer.dequeue();
+		assertEquals("d", ringBuffer.peek());*/
+    }
+
+    @Test
+    void testDequeue() {
+        ringBuffer.enqueue("a");
+        assertEquals("a", ringBuffer.dequeue());
+
+        ringBuffer.enqueue("b");
+        ringBuffer.enqueue("c");
+        ringBuffer.dequeue();
+        assertEquals("c", ringBuffer.dequeue());
+    }
+
+    @Test
+    void testDequeueWhenBufferIsEmpty() {
+        assertThrows(RuntimeException.class, () -> {
+            ringBuffer.dequeue();
+        });
+    }
+
+    @Test
+    void testPeek() {
+        ringBuffer.enqueue("a");
+        assertEquals("a", ringBuffer.peek());
+
+        ringBuffer.enqueue("b");
+        assertNotEquals("b", ringBuffer.peek());
+        assertEquals("a", ringBuffer.peek());
+    }
+
+    @Test
+    void testPeekWhenBufferIsEmpty() {
+        assertThrows(RuntimeException.class, () -> {
+            ringBuffer.peek();
+        });
+    }
 }
