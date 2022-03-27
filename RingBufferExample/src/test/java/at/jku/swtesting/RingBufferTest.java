@@ -2,121 +2,170 @@ package at.jku.swtesting;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class RingBufferTest<Item> {
+import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Stream;
 
-    private static final int DEFAULT_BUFFER_CAPACITY = 3;
+class RingBufferTest<I> {
 
-    private RingBuffer<String> ringBuffer;
+	private static final int RING_BUFFER_CAPACITY = 3;
+	private RingBuffer<String> ringBuffer;
 
-    @BeforeEach
-    void setUp() {
-        ringBuffer = new RingBuffer<>(DEFAULT_BUFFER_CAPACITY);
-    }
+	@BeforeEach
+	void setUp() {
+		ringBuffer = new RingBuffer<>(RING_BUFFER_CAPACITY);
+	}
 
-    @Test
-    void testRingBufferConstructor() {
-        assertNotNull(ringBuffer);
-        assertThrows(IllegalArgumentException.class, () -> {
-            new RingBuffer<>(0);
-        });
-    }
+	@Test
+	void testRingBufferConstructor() {
+		assertNotNull(ringBuffer);
+		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+			new RingBuffer<>(0);
+		});
+		assertEquals("Initial capacity is less than one", exception.getMessage());
+	}
 
-    @Test
-    void testCapacity() {
-        assertEquals(DEFAULT_BUFFER_CAPACITY, ringBuffer.capacity());
+	@ParameterizedTest
+	@MethodSource("provideDifferentStringCapacties")
+	void testCapacity(String... bufferElements) {
+		setUpBuffer(bufferElements);
+		assertEquals(RING_BUFFER_CAPACITY, ringBuffer.capacity());
+	}
 
-		/*
-		TODO: Testet der folgende Code-Abschnitt nicht die Methode "size"?
+	@ParameterizedTest
+	@MethodSource("provideDifferentSizes")
+	void testSize(int referenceSize, String... bufferElements) {
+		setUpBuffer(bufferElements);
+		assertEquals(ringBuffer.size(), referenceSize);
+
+		ringBuffer.dequeue();
+		assertEquals(ringBuffer.size(), --referenceSize);
+	}
+
+	@Test
+	void testIsEmpty() {
+		assertTrue(ringBuffer.isEmpty());
+		ringBuffer.enqueue("a");
+		assertFalse(ringBuffer.isEmpty());
+	}
+
+	@Test
+	void testIsFull() {
+		setUpBuffer(new String[] { "1", "2", "3" });
+		assertTrue(ringBuffer.isFull());
+		ringBuffer.dequeue();
+		assertFalse(ringBuffer.isFull());
+	}
+
+	@Test
+	void testEnqueue() {
+		ringBuffer.enqueue("a");
+		assertEquals("a", ringBuffer.peek());
+		ringBuffer.enqueue("b");
+		ringBuffer.enqueue("c");
+		ringBuffer.enqueue("d");
+		assertEquals("b", ringBuffer.peek());
+		ringBuffer.dequeue();
+		ringBuffer.dequeue();
+		assertEquals("d", ringBuffer.peek());
+	}
+
+	@Test
+	void testDequeue() {
+		final RingBuffer<String> ringBuffer = new RingBuffer<>(RING_BUFFER_CAPACITY);
+		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+			ringBuffer.dequeue();
+		});
+		assertEquals("Empty ring buffer.", exception.getMessage());
+
 		ringBuffer.enqueue("1");
+		assertEquals("1", ringBuffer.dequeue());
 		ringBuffer.enqueue("2");
 		ringBuffer.enqueue("3");
-		assertEquals(3, ringBuffer.capacity());*/
-    }
+		ringBuffer.dequeue();
+		assertEquals("3", ringBuffer.dequeue());
+	}
 
-    @Test
-    void testSize() {
-        assertEquals(0, ringBuffer.size());
+	@Test
+	void testPeek() {
+		final RingBuffer<String> ringBuffer = new RingBuffer<>(RING_BUFFER_CAPACITY);
+		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+			ringBuffer.peek();
+		});
+		assertEquals("Empty ring buffer.", exception.getMessage());
 
-        ringBuffer.enqueue("a");
-        assertEquals(1, ringBuffer.size());
+		ringBuffer.enqueue("a");
+		assertEquals("a", ringBuffer.peek());
+		ringBuffer.enqueue("b");
+		assertNotEquals("b", ringBuffer.peek());
+	}
 
-        ringBuffer.dequeue();
-        assertEquals(0, ringBuffer.size());
-    }
+	@Test
+	void nextIteratorTest() {
+		Iterator<String> referenceIterator = List.of("1", "2", "3").iterator();
+		setUpBuffer(new String[] { "1", "2", "3" });
+		Iterator<String> actualIterator = ringBuffer.iterator();
 
-    @Test
-    void testIsEmpty() {
-        assertTrue(ringBuffer.isEmpty());
+		for (int i = 0; i < ringBuffer.size(); i++) {
+			assertEquals(referenceIterator.next(), actualIterator.next());
+		}
+	}
 
-        ringBuffer.enqueue("a");
-        assertFalse(ringBuffer.isEmpty());
-    }
+	@Test
+	void testHasNextIterator() {
+		setUpBuffer(new String[] { "1", "2", "3" });
+		Iterator<String> actualIterator = ringBuffer.iterator();
+		// check that hasNext is idempotent
+		for (int i = 0; i < 10; i++) {
+			assertTrue(actualIterator.hasNext());
 
-    @Test
-    void testIsFull() {
-        assertFalse(ringBuffer.isFull());
+		}
+	}
 
-        ringBuffer.enqueue("a");
-        ringBuffer.enqueue("b");
-        ringBuffer.enqueue("c");
-        assertTrue(ringBuffer.isFull());
-
-        ringBuffer.dequeue();
-        assertFalse(ringBuffer.isFull());
-    }
-
-    @Test
-    void testEnqueue() {
-        ringBuffer.enqueue("a");
-        assertEquals("a", ringBuffer.peek());
-
-        ringBuffer.enqueue("b");
-        ringBuffer.enqueue("c");
-        ringBuffer.enqueue("d");
-        assertEquals("b", ringBuffer.peek());
-
+	@Test
+	void testRemoveIterator() {
 		/*
-		TODO: Testet der folgende Code-Abschnitt nicht die Methode "dequeue"?
-		ringBuffer.dequeue();
-		ringBuffer.dequeue();
-		assertEquals("d", ringBuffer.peek());*/
-    }
+		 * method is not implemented, check for correct exception
+		 */
+		setUpBuffer(new String[] { "1", "2", "3" });
+		Iterator<String> actualIterator = ringBuffer.iterator();
+		assertThrows(UnsupportedOperationException.class, () -> {
+			actualIterator.remove();
+		});
+	}
 
-    @Test
-    void testDequeue() {
-        ringBuffer.enqueue("a");
-        assertEquals("a", ringBuffer.dequeue());
+	private static Stream<Arguments> provideDifferentStringCapacties() {
+		//@formatter:off
+		return Stream.of(
+				Arguments.of((Object) new String[] { null }),
+				Arguments.of((Object) new String[] { "1", "2" }),
+				Arguments.of((Object) new String[] { "1", "2", "3" }),
+				Arguments.of((Object) new String[] { "1", "2", "3", "4" }),
+				Arguments.of((Object) new String[] { "1", "2", "5" }), 
+				Arguments.of((Object) new String[] { "" })
+			);
+	}
 
-        ringBuffer.enqueue("b");
-        ringBuffer.enqueue("c");
-        ringBuffer.dequeue();
-        assertEquals("c", ringBuffer.dequeue());
-    }
+	private static Stream<Arguments> provideDifferentSizes() {
+		return Stream.of(
+				Arguments.of(1, (Object) new String[] { "1" }),
+				Arguments.of(2, (Object) new String[] { "1", "2" }),
+				Arguments.of(RING_BUFFER_CAPACITY, (Object) new String[] { "1", "2", "3" }),
+				Arguments.of(RING_BUFFER_CAPACITY, (Object) new String[] { "1", "2", "3", "4" }),
+				Arguments.of(RING_BUFFER_CAPACITY, (Object) new String[] { "1", "2", "5" }) 
+			);
+	}
+		//@formatter:on
 
-    @Test
-    void testDequeueWhenBufferIsEmpty() {
-        assertThrows(RuntimeException.class, () -> {
-            ringBuffer.dequeue();
-        });
-    }
-
-    @Test
-    void testPeek() {
-        ringBuffer.enqueue("a");
-        assertEquals("a", ringBuffer.peek());
-
-        ringBuffer.enqueue("b");
-        assertNotEquals("b", ringBuffer.peek());
-        assertEquals("a", ringBuffer.peek());
-    }
-
-    @Test
-    void testPeekWhenBufferIsEmpty() {
-        assertThrows(RuntimeException.class, () -> {
-            ringBuffer.peek();
-        });
-    }
+	private void setUpBuffer(String... bufferElements) {
+		for (String element : bufferElements) {
+			ringBuffer.enqueue(element);
+		}
+	}
 }
