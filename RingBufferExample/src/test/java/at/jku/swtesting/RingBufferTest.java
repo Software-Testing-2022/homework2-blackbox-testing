@@ -25,6 +25,10 @@ class RingBufferTest<I> {
 	@Test
 	void testRingBufferConstructor() {
 		assertNotNull(ringBuffer);
+	}
+
+	@Test
+	void testRingBufferConstructorBufferException() {
 		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
 			new RingBuffer<>(0);
 		});
@@ -42,10 +46,10 @@ class RingBufferTest<I> {
 	@MethodSource("provideDifferentSizes")
 	void testSize(int referenceSize, String... bufferElements) {
 		setUpBuffer(bufferElements);
-		assertEquals(ringBuffer.size(), referenceSize);
+		assertEquals(referenceSize, ringBuffer.size());
 
 		ringBuffer.dequeue();
-		assertEquals(ringBuffer.size(), --referenceSize);
+		assertEquals(--referenceSize, ringBuffer.size());
 	}
 
 	@Test
@@ -70,20 +74,12 @@ class RingBufferTest<I> {
 		ringBuffer.enqueue("b");
 		ringBuffer.enqueue("c");
 		ringBuffer.enqueue("d");
+//		test overriding
 		assertEquals("b", ringBuffer.peek());
-		ringBuffer.dequeue();
-		ringBuffer.dequeue();
-		assertEquals("d", ringBuffer.peek());
 	}
 
 	@Test
 	void testDequeue() {
-		final RingBuffer<String> ringBuffer = new RingBuffer<>(RING_BUFFER_CAPACITY);
-		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-			ringBuffer.dequeue();
-		});
-		assertEquals("Empty ring buffer.", exception.getMessage());
-
 		ringBuffer.enqueue("1");
 		assertEquals("1", ringBuffer.dequeue());
 		ringBuffer.enqueue("2");
@@ -93,13 +89,15 @@ class RingBufferTest<I> {
 	}
 
 	@Test
-	void testPeek() {
-		final RingBuffer<String> ringBuffer = new RingBuffer<>(RING_BUFFER_CAPACITY);
+	void testDequeueException() {
 		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-			ringBuffer.peek();
+			ringBuffer.dequeue();
 		});
 		assertEquals("Empty ring buffer.", exception.getMessage());
+	}
 
+	@Test
+	void testPeek() {
 		ringBuffer.enqueue("a");
 		assertEquals("a", ringBuffer.peek());
 		ringBuffer.enqueue("b");
@@ -107,7 +105,15 @@ class RingBufferTest<I> {
 	}
 
 	@Test
-	void nextIteratorTest() {
+	void testPeekException() {
+		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+			ringBuffer.peek();
+		});
+		assertEquals("Empty ring buffer.", exception.getMessage());
+	}
+
+	@Test
+	void TestNextIterator() {
 		Iterator<String> referenceIterator = List.of("1", "2", "3").iterator();
 		setUpBuffer(new String[] { "1", "2", "3" });
 		Iterator<String> actualIterator = ringBuffer.iterator();
@@ -116,7 +122,7 @@ class RingBufferTest<I> {
 			assertEquals(referenceIterator.next(), actualIterator.next());
 		}
 	}
-
+	
 	@Test
 	void testHasNextIterator() {
 		setUpBuffer(new String[] { "1", "2", "3" });
@@ -124,12 +130,11 @@ class RingBufferTest<I> {
 		// check that hasNext is idempotent
 		for (int i = 0; i < 10; i++) {
 			assertTrue(actualIterator.hasNext());
-
 		}
 	}
 
 	@Test
-	void testRemoveIterator() {
+	void testRemoveIteratorException() {
 		/*
 		 * method is not implemented, check for correct exception
 		 */
@@ -147,7 +152,6 @@ class RingBufferTest<I> {
 				Arguments.of((Object) new String[] { "1", "2" }),
 				Arguments.of((Object) new String[] { "1", "2", "3" }),
 				Arguments.of((Object) new String[] { "1", "2", "3", "4" }),
-				Arguments.of((Object) new String[] { "1", "2", "5" }), 
 				Arguments.of((Object) new String[] { "" })
 			);
 	}
