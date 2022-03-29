@@ -67,15 +67,28 @@ class RingBufferTest<I> {
 		assertFalse(ringBuffer.isFull());
 	}
 
-	@Test
-	void testEnqueue() {
-		ringBuffer.enqueue("a");
-		assertEquals("a", ringBuffer.peek());
-		ringBuffer.enqueue("b");
-		ringBuffer.enqueue("c");
-		ringBuffer.enqueue("d");
-//		test overriding
-		assertEquals("b", ringBuffer.peek());
+	@ParameterizedTest
+	@MethodSource("provideDifferentSizes")
+	void testEnqueueOverriding(int referenceSize, String... bufferElements) {
+		for (int i = 0; i < bufferElements.length; i++) {
+			ringBuffer.enqueue(bufferElements[i]);
+			if (i > RING_BUFFER_CAPACITY) {
+				// if we reach the max capacity of the buffer the first element gets overridden
+				assertEquals(bufferElements[i], ringBuffer.peek());
+			} else {
+				assertEquals(bufferElements[i], getLastBufferElement());
+			}
+		}
+	}
+
+	private String getLastBufferElement() {
+		String element = "";
+		Iterator<String> iterator = ringBuffer.iterator();
+		while (iterator.hasNext()) {
+			element = iterator.next();
+		}
+
+		return element;
 	}
 
 	@Test
@@ -122,7 +135,7 @@ class RingBufferTest<I> {
 			assertEquals(referenceIterator.next(), actualIterator.next());
 		}
 	}
-	
+
 	@Test
 	void testHasNextIterator() {
 		setUpBuffer(new String[] { "1", "2", "3" });
@@ -162,7 +175,10 @@ class RingBufferTest<I> {
 				Arguments.of(2, (Object) new String[] { "1", "2" }),
 				Arguments.of(RING_BUFFER_CAPACITY, (Object) new String[] { "1", "2", "3" }),
 				Arguments.of(RING_BUFFER_CAPACITY, (Object) new String[] { "1", "2", "3", "4" }),
-				Arguments.of(RING_BUFFER_CAPACITY, (Object) new String[] { "1", "2", "5" }) 
+				Arguments.of(RING_BUFFER_CAPACITY, (Object) new String[] { "1", "2", "3", "4", "5" }),
+				Arguments.of(RING_BUFFER_CAPACITY, (Object) new String[] { "1", "2", "3", "4", "5", "6" }),
+				Arguments.of(RING_BUFFER_CAPACITY, (Object) new String[] { "1", "2", "3", "4", "5", "6", "7" }),
+				Arguments.of(RING_BUFFER_CAPACITY, (Object) new String[] { "1", "2", "3", "4", "5", "6", "7", "8" }) 
 			);
 	}
 		//@formatter:on
