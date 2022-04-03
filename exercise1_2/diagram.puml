@@ -1,0 +1,17 @@
+@startuml
+
+[*] --> empty : new RingBuffer(capacity)
+[*] -> [*] : Error case: new RingBuffer(capacity<1)
+empty --> [*] : Error case: peek[size = 0]
+empty --> [*] : Error case: dequeue[size = 0]
+
+empty -> filled : enqueue
+filled -> filled : peek[size > 0]
+filled -> empty : dequeue[size = 0]
+filled -> filled : enqueue[size +1 < capacity]
+
+filled -> full : enqueue[size = capacity]
+full -> filled : dequeue
+full -> full : peek[size > 0]
+full -> full : enqueue[size = capacity]
+@enduml
