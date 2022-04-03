@@ -1,10 +1,13 @@
 #: Sequence
-1: new Ringbuffer(0) - new Ringbuffer(0<1) - final
-2: new Ringbuffer(3) - empty - peek -  peek[0] -final
-3:new Ringbuffer(0) - empty - dequeue - Error case: dequeue
-4: new Ringbuffer(0) - 
-5: new Ringbuffer(0) - 
-6: new Ringbuffer(0) - 
-7: new Ringbuffer(0) - 
-8: new Ringbuffer(0) - 
-9: new Ringbuffer(0) - 
+1: new Ringbuffer(0) - final 
+2: new Ringbuffer(3) - empty - peek() -final
+3: new Ringbuffer(3) - empty - dequeue() - final
+4: new Ringbuffer(3) - empty
+5: new Ringbuffer(3) - empty - enqueue(a) -  filled - dequeue(a) - empty
+6: new Ringbuffer(3) - empty - enqueue(a) - filled - peek() - filled
+7: new Ringbuffer(3) - empty - enqueue(a) - filled - enqueue(b) - filled
+8: new Ringbuffer(2) - empty - enqueue(a) - filled - enqueue(b) - full
+9: new Ringbuffer(3) - empty - enqueue(a) - filled - enqueue(b) - filled - dequeue() - filled
+10: new Ringbuffer(2) - empty - enqueue(a) - filled - enqueue(b) - full - peek() - full
+11: new Ringbuffer(2) - empty - enqueue(a) - filled - enqueue(b) - full - enqueue(c) - full
+12: new Ringbuffer(2) - empty - enqueue(a) - filled - enqueue(b) - full - dequeue(a) - filled
