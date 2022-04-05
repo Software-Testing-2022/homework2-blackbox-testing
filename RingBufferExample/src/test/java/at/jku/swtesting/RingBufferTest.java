@@ -12,7 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
 
-class RingBufferTest<I> {
+class RingBufferTest {
 
 	private static final int RING_BUFFER_CAPACITY = 3;
 	private RingBuffer<String> ringBuffer;
